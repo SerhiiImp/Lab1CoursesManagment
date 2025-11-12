@@ -8,7 +8,6 @@ public class BasicOperatorsTest {
 
     private final double EPS = 1e-9;
 
-    // ---------- 1. SUM AND AVERAGE ----------
     @DataProvider(name = "sumAndAverageData")
     public Object[][] sumAndAverageData() {
         return new Object[][] {
@@ -27,7 +26,6 @@ public class BasicOperatorsTest {
         sa.assertAll();
     }
 
-    // ---------- 2. MAX OF THREE ----------
     @DataProvider(name = "maxOfThreeData")
     public Object[][] maxOfThreeData() {
         return new Object[][] {
@@ -45,7 +43,6 @@ public class BasicOperatorsTest {
         sa.assertAll();
     }
 
-    // ---------- 3. GRADE FROM SCORE ----------
     @DataProvider(name = "gradeFromScoreData")
     public Object[][] gradeFromScoreData() {
         return new Object[][] {
@@ -70,10 +67,9 @@ public class BasicOperatorsTest {
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testGradeFromScoreInvalid() {
-        BasicOperators.gradeFromScore(120); // invalid
+        BasicOperators.gradeFromScore(120);
     }
 
-    // ---------- 4. DAY OF WEEK ----------
     @DataProvider(name = "dayOfWeekData")
     public Object[][] dayOfWeekData() {
         return new Object[][] {
@@ -96,7 +92,6 @@ public class BasicOperatorsTest {
         BasicOperators.dayOfWeek(10);
     }
 
-    // ---------- 5. COUNTDOWN ----------
     @DataProvider(name = "countdownData")
     public Object[][] countdownData() {
         return new Object[][] {
@@ -118,7 +113,6 @@ public class BasicOperatorsTest {
         BasicOperators.countdown(-5);
     }
 
-    // ---------- 6. FACTORIAL ----------
     @DataProvider(name = "factorialData")
     public Object[][] factorialData() {
         return new Object[][] {
@@ -141,7 +135,6 @@ public class BasicOperatorsTest {
         BasicOperators.factorial(-3);
     }
 
-    // ---------- 7. REVERSE ARRAY ----------
     @Test
     public void testReverseArray() {
         int[] arr = {1, 2, 3, 4};
@@ -157,7 +150,6 @@ public class BasicOperatorsTest {
         BasicOperators.reverseArray(null);
     }
 
-    // ---------- 8. SUM OF MATRIX ----------
     @Test
     public void testSumMatrix() {
         int[][] matrix = {{1,2}, {3,4}};
@@ -173,7 +165,6 @@ public class BasicOperatorsTest {
         BasicOperators.sumMatrix(null);
     }
 
-    // ---------- 9. PALINDROME ----------
     @DataProvider(name = "palindromeData")
     public Object[][] palindromeData() {
         return new Object[][] {
@@ -196,7 +187,6 @@ public class BasicOperatorsTest {
         BasicOperators.isPalindrome(null);
     }
 
-    // ---------- 10. MIN MAX ARRAY ----------
     @Test
     public void testFindMinMax() {
         int[] arr = {5, 2, 9, -1};
@@ -212,7 +202,6 @@ public class BasicOperatorsTest {
         BasicOperators.findMinMax(new int[]{});
     }
 
-    // ---------- 11. MULTIPLICATION TABLE ----------
     @Test
     public void testMultiplicationTable() {
         int[][] result = BasicOperators.multiplicationTable(3);
@@ -231,7 +220,6 @@ public class BasicOperatorsTest {
         BasicOperators.multiplicationTable(0);
     }
 
-    // ---------- 12. EVEN NUMBERS ----------
     @Test
     public void testEvenNumbersUpToN() {
         int[] result = BasicOperators.evenNumbersUpToN(10);
@@ -241,7 +229,6 @@ public class BasicOperatorsTest {
         sa.assertAll();
     }
 
-    // ---------- 13. PRIME CHECK ----------
     @DataProvider(name = "primeData")
     public Object[][] primeData() {
         return new Object[][] {
@@ -259,7 +246,6 @@ public class BasicOperatorsTest {
         sa.assertAll();
     }
 
-    // ---------- 14. COUNT VOWELS ----------
     @Test
     public void testCountVowels() {
         int result = BasicOperators.countVowels("hello world");
@@ -268,7 +254,6 @@ public class BasicOperatorsTest {
         sa.assertAll();
     }
 
-    // ---------- 15. FIBONACCI ----------
     @Test
     public void testFibonacci() {
         int[] result = BasicOperators.fibonacci(5);
@@ -283,7 +268,6 @@ public class BasicOperatorsTest {
         BasicOperators.fibonacci(-1);
     }
 
-    // ---------- 16. MATRIX TRANSPOSE ----------
     @Test
     public void testTranspose() {
         int[][] matrix = {{1,2,3},{4,5,6}};
@@ -294,7 +278,6 @@ public class BasicOperatorsTest {
         sa.assertAll();
     }
 
-    // ---------- 17. SORT ARRAY ----------
     @Test
     public void testSortArray() {
         int[] arr = {5,3,8,1};
