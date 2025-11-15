@@ -2,14 +2,15 @@ package ua.university;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-public class GenericRepository<T> {
+public class GenericRepository<T extends Comparable<T>> {
     private static final Logger logger = Logger.getLogger(GenericRepository.class.getName());
-    private final List<T> storage = new ArrayList<>();
+    protected final List<T> storage = new ArrayList<>();
     private final IdentityExtractor<T> extractor;
 
     public GenericRepository(IdentityExtractor<T> extractor) {
@@ -44,5 +45,22 @@ public class GenericRepository<T> {
 
     public List<T> getAll() {
         return Collections.unmodifiableList(new ArrayList<>(storage));
+    }
+
+    public void sortByIdentity(String order) {
+        if ("asc".equalsIgnoreCase(order)) {
+            Collections.sort(storage);
+            logger.info("Sorted ascending by natural order");
+        } else if ("desc".equalsIgnoreCase(order)) {
+            storage.sort(Collections.reverseOrder());
+            logger.info("Sorted descending by natural order");
+        } else {
+            throw new IllegalArgumentException("Order must be 'asc' or 'desc'");
+        }
+    }
+
+    public void sortBy(Comparator<T> comparator) {
+        storage.sort(comparator);
+        logger.info("Sorted by custom comparator");
     }
 }

@@ -1,9 +1,10 @@
 package ua.university;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.Objects;
 
-public class Course {
+public class Course implements Comparable<Course> {
     private final String title;
     private final String description;
     private final int credits;
@@ -25,6 +26,23 @@ public class Course {
     public int getCredits() { return credits; }
     public LocalDate getStartDate() { return startDate; }
     public CourseLevel getLevel() { return level; }
+
+    @Override
+    public int compareTo(Course other) {
+        return this.title.compareTo(other.title);
+    }
+
+    public static Comparator<Course> byCredits() {
+        return Comparator.comparingInt(Course::getCredits);
+    }
+
+    public static Comparator<Course> byStartDate() {
+        return Comparator.comparing(Course::getStartDate);
+    }
+
+    public static Comparator<Course> byLevel() {
+        return Comparator.comparing(Course::getLevel);
+    }
 
     @Override
     public String toString() {
