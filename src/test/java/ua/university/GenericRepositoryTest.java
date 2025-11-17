@@ -1,109 +1,195 @@
 package ua.university;
 
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static org.testng.Assert.*;
 
 public class GenericRepositoryTest {
 
-    @Test
-    public void testStudentRepositorySortByLastName() {
-        StudentRepository repo = new StudentRepository();
-        repo.add(new Student("John", "Doe", "j@e.com", LocalDate.of(2024, 9, 1)));
-        repo.add(new Student("Alice", "Smith", "a@e.com", LocalDate.of(2024, 8, 1)));
-        repo.add(new Student("Bob", "Johnson", "b@e.com", LocalDate.of(2024, 7, 1)));
+    private StudentRepository studentRepo;
+    private CourseRepository courseRepo;
 
-        repo.sortByLastName("asc");
-        List<Student> sorted = repo.getAll();
-        assertEquals(sorted.get(0).lastName(), "Doe");
-        assertEquals(sorted.get(1).lastName(), "Johnson");
-        assertEquals(sorted.get(2).lastName(), "Smith");
+    @BeforeMethod
+    public void setUp() {
+        studentRepo = new StudentRepository();
+        courseRepo = new CourseRepository();
     }
 
     @Test
-    public void testStudentRepositorySortByEmail() {
-        StudentRepository repo = new StudentRepository();
-        repo.add(new Student("Z", "Z", "z@e.com", LocalDate.now()));
-        repo.add(new Student("A", "A", "a@e.com", LocalDate.now()));
-        repo.add(new Student("M", "M", "m@e.com", LocalDate.now()));
+    public void testStudentFindByEmail() {
+        studentRepo.add(new Student("John", "Doe", "john@test.com", LocalDate.now()));
+        studentRepo.add(new Student("Jane", "Smith", "jane@test.com", LocalDate.now()));
 
-        repo.sortByEmail();
-        List<Student> sorted = repo.getAll();
-        assertEquals(sorted.get(0).email(), "a@e.com");
-        assertEquals(sorted.get(1).email(), "m@e.com");
-        assertEquals(sorted.get(2).email(), "z@e.com");
+        Optional<Student> found = studentRepo.findByEmail("john@test.com");
+        assertTrue(found.isPresent());
+        assertEquals(found.get().firstName(), "John");
+
+        Optional<Student> notFound = studentRepo.findByEmail("nonexistent@test.com");
+        assertFalse(notFound.isPresent());
     }
 
     @Test
-    public void testStudentRepositorySortByEnrollmentDate() {
-        StudentRepository repo = new StudentRepository();
-        repo.add(new Student("A", "A", "a@e.com", LocalDate.of(2024, 10, 1)));
-        repo.add(new Student("B", "B", "b@e.com", LocalDate.of(2024, 8, 1)));
-        repo.add(new Student("C", "C", "c@e.com", LocalDate.of(2024, 9, 1)));
+    public void testStudentFindByLastName() {
+        studentRepo.add(new Student("John", "Doe", "john@test.com", LocalDate.now()));
+        studentRepo.add(new Student("Jane", "Doe", "jane@test.com", LocalDate.now()));
+        studentRepo.add(new Student("Bob", "Smith", "bob@test.com", LocalDate.now()));
 
-        repo.sortByEnrollmentDate();
-        List<Student> sorted = repo.getAll();
-        assertEquals(sorted.get(0).enrollmentDate(), LocalDate.of(2024, 8, 1));
-        assertEquals(sorted.get(1).enrollmentDate(), LocalDate.of(2024, 9, 1));
-        assertEquals(sorted.get(2).enrollmentDate(), LocalDate.of(2024, 10, 1));
+        List<Student> results = studentRepo.findByLastName("Doe");
+        assertEquals(results.size(), 2);
+        assertTrue(results.stream().allMatch(s -> s.lastName().equalsIgnoreCase("Doe")));
     }
 
     @Test
-    public void testCourseRepositorySortByTitle() {
-        CourseRepository repo = new CourseRepository();
-        repo.add(new Course("Zebra", "desc", 3, LocalDate.now(), CourseLevel.BEGINNER));
-        repo.add(new Course("Alpha", "desc", 4, LocalDate.now(), CourseLevel.INTERMEDIATE));
-        repo.add(new Course("Beta", "desc", 5, LocalDate.now(), CourseLevel.ADVANCED));
+    public void testStudentFindByFirstName() {
+        studentRepo.add(new Student("John", "Doe", "john1@test.com", LocalDate.now()));
+        studentRepo.add(new Student("John", "Smith", "john2@test.com", LocalDate.now()));
+        studentRepo.add(new Student("Jane", "Brown", "jane@test.com", LocalDate.now()));
 
-        repo.sortByTitle("asc");
-        List<Course> sorted = repo.getAll();
-        assertEquals(sorted.get(0).getTitle(), "Alpha");
-        assertEquals(sorted.get(1).getTitle(), "Beta");
-        assertEquals(sorted.get(2).getTitle(), "Zebra");
+        List<Student> results = studentRepo.findByFirstName("John");
+        assertEquals(results.size(), 2);
+        assertTrue(results.stream().allMatch(s -> s.firstName().equalsIgnoreCase("John")));
     }
 
     @Test
-    public void testCourseRepositorySortByCredits() {
-        CourseRepository repo = new CourseRepository();
-        repo.add(new Course("C1", "d", 5, LocalDate.now(), CourseLevel.BEGINNER));
-        repo.add(new Course("C2", "d", 3, LocalDate.now(), CourseLevel.BEGINNER));
-        repo.add(new Course("C3", "d", 4, LocalDate.now(), CourseLevel.BEGINNER));
+    public void testStudentFindEnrolledAfter() {
+        LocalDate cutoff = LocalDate.of(2024, 6, 1);
+        studentRepo.add(new Student("A", "A", "a@t.com", LocalDate.of(2024, 5, 1)));
+        studentRepo.add(new Student("B", "B", "b@t.com", LocalDate.of(2024, 7, 1)));
+        studentRepo.add(new Student("C", "C", "c@t.com", LocalDate.of(2024, 8, 1)));
 
-        repo.sortByCredits();
-        List<Course> sorted = repo.getAll();
-        assertEquals(sorted.get(0).getCredits(), 3);
-        assertEquals(sorted.get(1).getCredits(), 4);
-        assertEquals(sorted.get(2).getCredits(), 5);
+        List<Student> results = studentRepo.findEnrolledAfter(cutoff);
+        assertEquals(results.size(), 2);
+        assertTrue(results.stream().allMatch(s -> s.enrollmentDate().isAfter(cutoff)));
     }
 
     @Test
-    public void testCourseRepositorySortByStartDate() {
-        CourseRepository repo = new CourseRepository();
-        repo.add(new Course("C1", "d", 3, LocalDate.of(2025, 3, 1), CourseLevel.BEGINNER));
-        repo.add(new Course("C2", "d", 3, LocalDate.of(2025, 1, 1), CourseLevel.BEGINNER));
-        repo.add(new Course("C3", "d", 3, LocalDate.of(2025, 2, 1), CourseLevel.BEGINNER));
+    public void testStudentFindEnrolledBefore() {
+        LocalDate cutoff = LocalDate.of(2024, 6, 1);
+        studentRepo.add(new Student("A", "A", "a@t.com", LocalDate.of(2024, 5, 1)));
+        studentRepo.add(new Student("B", "B", "b@t.com", LocalDate.of(2024, 7, 1)));
+        studentRepo.add(new Student("C", "C", "c@t.com", LocalDate.of(2024, 4, 1)));
 
-        repo.sortByStartDate();
-        List<Course> sorted = repo.getAll();
-        assertEquals(sorted.get(0).getStartDate(), LocalDate.of(2025, 1, 1));
-        assertEquals(sorted.get(1).getStartDate(), LocalDate.of(2025, 2, 1));
-        assertEquals(sorted.get(2).getStartDate(), LocalDate.of(2025, 3, 1));
+        List<Student> results = studentRepo.findEnrolledBefore(cutoff);
+        assertEquals(results.size(), 2);
+        assertTrue(results.stream().allMatch(s -> s.enrollmentDate().isBefore(cutoff)));
     }
 
     @Test
-    public void testCourseRepositorySortByLevel() {
-        CourseRepository repo = new CourseRepository();
-        repo.add(new Course("C1", "d", 3, LocalDate.now(), CourseLevel.ADVANCED));
-        repo.add(new Course("C2", "d", 3, LocalDate.now(), CourseLevel.BEGINNER));
-        repo.add(new Course("C3", "d", 3, LocalDate.now(), CourseLevel.INTERMEDIATE));
+    public void testStudentFindEnrolledBetween() {
+        LocalDate start = LocalDate.of(2024, 5, 1);
+        LocalDate end = LocalDate.of(2024, 7, 31);
+        studentRepo.add(new Student("A", "A", "a@t.com", LocalDate.of(2024, 4, 15)));
+        studentRepo.add(new Student("B", "B", "b@t.com", LocalDate.of(2024, 6, 15)));
+        studentRepo.add(new Student("C", "C", "c@t.com", LocalDate.of(2024, 8, 15)));
 
-        repo.sortByLevel();
-        List<Course> sorted = repo.getAll();
-        assertEquals(sorted.get(0).getLevel(), CourseLevel.BEGINNER);
-        assertEquals(sorted.get(1).getLevel(), CourseLevel.INTERMEDIATE);
-        assertEquals(sorted.get(2).getLevel(), CourseLevel.ADVANCED);
+        List<Student> results = studentRepo.findEnrolledBetween(start, end);
+        assertEquals(results.size(), 1);
+        assertEquals(results.get(0).email(), "b@t.com");
+    }
+
+    @Test
+    public void testStudentCountStudents() {
+        studentRepo.add(new Student("A", "A", "a@t.com", LocalDate.now()));
+        studentRepo.add(new Student("B", "B", "b@t.com", LocalDate.now()));
+        studentRepo.add(new Student("C", "C", "c@t.com", LocalDate.now()));
+
+        long count = studentRepo.countStudents();
+        assertEquals(count, 3);
+    }
+
+    @Test
+    public void testCourseFindByTitle() {
+        courseRepo.add(new Course("Java", "desc", 3, LocalDate.now(), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("Python", "desc", 4, LocalDate.now(), CourseLevel.INTERMEDIATE));
+
+        Optional<Course> found = courseRepo.findByTitle("Java");
+        assertTrue(found.isPresent());
+        assertEquals(found.get().getCredits(), 3);
+
+        Optional<Course> notFound = courseRepo.findByTitle("C++");
+        assertFalse(notFound.isPresent());
+    }
+
+    @Test
+    public void testCourseFindByLevel() {
+        courseRepo.add(new Course("C1", "d", 3, LocalDate.now(), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("C2", "d", 4, LocalDate.now(), CourseLevel.ADVANCED));
+        courseRepo.add(new Course("C3", "d", 5, LocalDate.now(), CourseLevel.ADVANCED));
+
+        List<Course> results = courseRepo.findByLevel(CourseLevel.ADVANCED);
+        assertEquals(results.size(), 2);
+        assertTrue(results.stream().allMatch(c -> c.getLevel() == CourseLevel.ADVANCED));
+    }
+
+    @Test
+    public void testCourseFindByCreditsRange() {
+        courseRepo.add(new Course("C1", "d", 2, LocalDate.now(), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("C2", "d", 3, LocalDate.now(), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("C3", "d", 4, LocalDate.now(), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("C4", "d", 5, LocalDate.now(), CourseLevel.BEGINNER));
+
+        List<Course> results = courseRepo.findByCreditsRange(3, 4);
+        assertEquals(results.size(), 2);
+        assertTrue(results.stream().allMatch(c -> c.getCredits() >= 3 && c.getCredits() <= 4));
+    }
+
+    @Test
+    public void testCourseFindStartingAfter() {
+        LocalDate cutoff = LocalDate.of(2025, 2, 1);
+        courseRepo.add(new Course("C1", "d", 3, LocalDate.of(2025, 1, 1), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("C2", "d", 3, LocalDate.of(2025, 3, 1), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("C3", "d", 3, LocalDate.of(2025, 4, 1), CourseLevel.BEGINNER));
+
+        List<Course> results = courseRepo.findStartingAfter(cutoff);
+        assertEquals(results.size(), 2);
+        assertTrue(results.stream().allMatch(c -> c.getStartDate().isAfter(cutoff)));
+    }
+
+    @Test
+    public void testCourseFindStartingBefore() {
+        LocalDate cutoff = LocalDate.of(2025, 3, 1);
+        courseRepo.add(new Course("C1", "d", 3, LocalDate.of(2025, 1, 1), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("C2", "d", 3, LocalDate.of(2025, 2, 1), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("C3", "d", 3, LocalDate.of(2025, 4, 1), CourseLevel.BEGINNER));
+
+        List<Course> results = courseRepo.findStartingBefore(cutoff);
+        assertEquals(results.size(), 2);
+        assertTrue(results.stream().allMatch(c -> c.getStartDate().isBefore(cutoff)));
+    }
+
+    @Test
+    public void testCourseFindByTitleContains() {
+        courseRepo.add(new Course("Java Basics", "d", 3, LocalDate.now(), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("Advanced Java", "d", 4, LocalDate.now(), CourseLevel.ADVANCED));
+        courseRepo.add(new Course("Python", "d", 3, LocalDate.now(), CourseLevel.BEGINNER));
+
+        List<Course> results = courseRepo.findByTitleContains("Java");
+        assertEquals(results.size(), 2);
+        assertTrue(results.stream().allMatch(c -> c.getTitle().toLowerCase().contains("java")));
+    }
+
+    @Test
+    public void testCourseGetTotalCredits() {
+        courseRepo.add(new Course("C1", "d", 3, LocalDate.now(), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("C2", "d", 4, LocalDate.now(), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("C3", "d", 5, LocalDate.now(), CourseLevel.BEGINNER));
+
+        int total = courseRepo.getTotalCredits();
+        assertEquals(total, 12);
+    }
+
+    @Test
+    public void testCourseGetAverageCredits() {
+        courseRepo.add(new Course("C1", "d", 3, LocalDate.now(), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("C2", "d", 4, LocalDate.now(), CourseLevel.BEGINNER));
+        courseRepo.add(new Course("C3", "d", 5, LocalDate.now(), CourseLevel.BEGINNER));
+
+        double avg = courseRepo.getAverageCredits();
+        assertEquals(avg, 4.0, 0.01);
     }
 }
