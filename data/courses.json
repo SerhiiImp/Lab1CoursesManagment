@@ -1,0 +1,31 @@
+[ {
+  "title" : "Java Programming",
+  "description" : "Introduction to Java",
+  "credits" : 3,
+  "startDate" : "2025-01-15",
+  "level" : "BEGINNER"
+}, {
+  "title" : "Data Structures",
+  "description" : "Advanced Data Structures",
+  "credits" : 4,
+  "startDate" : "2025-02-01",
+  "level" : "INTERMEDIATE"
+}, {
+  "title" : "Algorithms",
+  "description" : "Algorithm Design and Analysis",
+  "credits" : 5,
+  "startDate" : "2025-03-01",
+  "level" : "ADVANCED"
+}, {
+  "title" : "Spring Boot",
+  "description" : "Enterprise Java Development",
+  "credits" : 4,
+  "startDate" : "2025-04-01",
+  "level" : "ADVANCED"
+}, {
+  "title" : "Database Systems",
+  "description" : "SQL and NoSQL Databases",
+  "credits" : 3,
+  "startDate" : "2025-01-20",
+  "level" : "INTERMEDIATE"
+} ]

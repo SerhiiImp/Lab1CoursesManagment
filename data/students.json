@@ -1,0 +1,26 @@
+[ {
+  "firstName" : "Student1",
+  "lastName" : "LastName1",
+  "email" : "student1@university.com",
+  "enrollmentDate" : "2024-09-01"
+}, {
+  "firstName" : "Student2",
+  "lastName" : "LastName2",
+  "email" : "student2@university.com",
+  "enrollmentDate" : "2024-09-02"
+}, {
+  "firstName" : "Student3",
+  "lastName" : "LastName3",
+  "email" : "student3@university.com",
+  "enrollmentDate" : "2024-09-03"
+}, {
+  "firstName" : "Student4",
+  "lastName" : "LastName4",
+  "email" : "student4@university.com",
+  "enrollmentDate" : "2024-09-04"
+}, {
+  "firstName" : "Student5",
+  "lastName" : "LastName5",
+  "email" : "student5@university.com",
+  "enrollmentDate" : "2024-09-05"
+} ]

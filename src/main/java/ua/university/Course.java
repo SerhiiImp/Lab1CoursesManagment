@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Course implements Comparable<Course> {
     private final String title;
     private final String description;
@@ -11,7 +14,13 @@ public class Course implements Comparable<Course> {
     private final LocalDate startDate;
     private final CourseLevel level;
 
-    public Course(String title, String description, int credits, LocalDate startDate, CourseLevel level) {
+    @JsonCreator
+    public Course(
+            @JsonProperty("title") String title,
+            @JsonProperty("description") String description,
+            @JsonProperty("credits") int credits,
+            @JsonProperty("startDate") LocalDate startDate,
+            @JsonProperty("level") CourseLevel level) {
         if (title == null || title.isBlank()) throw new IllegalArgumentException("title is required");
         this.title = title.trim();
         this.description = description == null ? "" : description.trim();

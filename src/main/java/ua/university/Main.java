@@ -1,5 +1,11 @@
 package ua.university;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import ua.university.config.ConfigManager;
+import ua.university.exception.DataSerializationException;
+import ua.university.service.SerializationService;
+
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Logger;
@@ -8,93 +14,130 @@ public class Main {
     private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     public static void main(String[] args) {
-        logger.info("Starting Lab 6 Demo - Stream API");
+        logger.info("Starting Lab 7 - Serialization and File Handling");
 
-        StudentRepository studentRepo = new StudentRepository();
-        studentRepo.add(new Student("John", "Doe", "john.doe@university.com", LocalDate.of(2024, 9, 1)));
-        studentRepo.add(new Student("Alice", "Smith", "alice.smith@university.com", LocalDate.of(2024, 8, 15)));
-        studentRepo.add(new Student("Bob", "Johnson", "bob.johnson@university.com", LocalDate.of(2024, 9, 10)));
-        studentRepo.add(new Student("Emma", "Doe", "emma.doe@university.com", LocalDate.of(2024, 7, 20)));
-        studentRepo.add(new Student("Charlie", "Brown", "charlie.brown@university.com", LocalDate.of(2024, 10, 5)));
+        try {
+            ConfigManager config = new ConfigManager("src/main/resources/config.properties");
+            logger.info("Configuration loaded successfully");
 
-        logger.info("=== Student Search Examples ===");
-        
-        studentRepo.findByEmail("john.doe@university.com")
-                .ifPresent(s -> logger.info("Found by email: " + s));
+            String studentsJsonPath = config.getProperty("students.json.path");
+            String studentsYamlPath = config.getProperty("students.yaml.path");
+            String coursesJsonPath = config.getProperty("courses.json.path");
+            String coursesYamlPath = config.getProperty("courses.yaml.path");
+            int testObjectsCount = config.getIntProperty("test.objects.count", 5);
 
-        logger.info("--- Students with lastName 'Doe' ---");
-        studentRepo.findByLastName("Doe").forEach(s -> logger.info(s.toString()));
+            logger.info("Creating test data with " + testObjectsCount + " objects");
 
-        logger.info("--- Students enrolled after 2024-08-20 ---");
-        studentRepo.findEnrolledAfter(LocalDate.of(2024, 8, 20))
-                .forEach(s -> logger.info(s.toString()));
+            StudentRepository originalStudentRepo = new StudentRepository();
+            for (int i = 1; i <= testObjectsCount; i++) {
+                originalStudentRepo.add(new Student(
+                        "Student" + i,
+                        "LastName" + i,
+                        "student" + i + "@university.com",
+                        LocalDate.of(2024, 9, i)
+                ));
+            }
 
-        logger.info("--- Students enrolled between 2024-08-01 and 2024-09-05 ---");
-        studentRepo.findEnrolledBetween(LocalDate.of(2024, 8, 1), LocalDate.of(2024, 9, 5))
-                .forEach(s -> logger.info(s.toString()));
+            CourseRepository originalCourseRepo = new CourseRepository();
+            originalCourseRepo.add(new Course("Java Programming", "Introduction to Java", 3, LocalDate.of(2025, 1, 15), CourseLevel.BEGINNER));
+            originalCourseRepo.add(new Course("Data Structures", "Advanced Data Structures", 4, LocalDate.of(2025, 2, 1), CourseLevel.INTERMEDIATE));
+            originalCourseRepo.add(new Course("Algorithms", "Algorithm Design and Analysis", 5, LocalDate.of(2025, 3, 1), CourseLevel.ADVANCED));
+            originalCourseRepo.add(new Course("Spring Boot", "Enterprise Java Development", 4, LocalDate.of(2025, 4, 1), CourseLevel.ADVANCED));
+            originalCourseRepo.add(new Course("Database Systems", "SQL and NoSQL Databases", 3, LocalDate.of(2025, 1, 20), CourseLevel.INTERMEDIATE));
 
-        logger.info("--- Terminal operations: collect, forEach, reduce ---");
-        studentRepo.printAllEmails();
-        studentRepo.concatenateLastNames();
-        studentRepo.countStudents();
+            SerializationService serializationService = new SerializationService();
 
-        CourseRepository courseRepo = new CourseRepository();
-        courseRepo.add(new Course("Java Programming", "Intro to Java", 3, LocalDate.of(2025, 1, 15), CourseLevel.BEGINNER));
-        courseRepo.add(new Course("Data Structures", "Advanced DS", 4, LocalDate.of(2025, 2, 1), CourseLevel.INTERMEDIATE));
-        courseRepo.add(new Course("Algorithms", "Algorithm design", 5, LocalDate.of(2025, 3, 1), CourseLevel.ADVANCED));
-        courseRepo.add(new Course("Java Advanced", "Spring Boot", 4, LocalDate.of(2025, 4, 1), CourseLevel.ADVANCED));
-        courseRepo.add(new Course("Database Systems", "SQL and NoSQL", 3, LocalDate.of(2025, 1, 20), CourseLevel.INTERMEDIATE));
+            logger.info("=== Saving data to JSON ===");
+            serializationService.saveToJson(originalStudentRepo.getAll(), studentsJsonPath);
+            serializationService.saveToJson(originalCourseRepo.getAll(), coursesJsonPath);
 
-        logger.info("=== Course Search Examples ===");
+            logger.info("=== Saving data to YAML ===");
+            serializationService.saveToYaml(originalStudentRepo.getAll(), studentsYamlPath);
+            serializationService.saveToYaml(originalCourseRepo.getAll(), coursesYamlPath);
 
-        courseRepo.findByTitle("Java Programming")
-                .ifPresent(c -> logger.info("Found by title: " + c));
+            logger.info("=== Loading data from JSON ===");
+            List<Student> studentsFromJson = serializationService.loadFromJson(
+                    studentsJsonPath,
+                    new TypeReference<List<Student>>() {}
+            );
+            List<Course> coursesFromJson = serializationService.loadFromJson(
+                    coursesJsonPath,
+                    new TypeReference<List<Course>>() {}
+            );
 
-        logger.info("--- Courses with level ADVANCED ---");
-        courseRepo.findByLevel(CourseLevel.ADVANCED).forEach(c -> logger.info(c.toString()));
+            logger.info("=== Loading data from YAML ===");
+            List<Student> studentsFromYaml = serializationService.loadFromYaml(
+                    studentsYamlPath,
+                    new TypeReference<List<Student>>() {}
+            );
+            List<Course> coursesFromYaml = serializationService.loadFromYaml(
+                    coursesYamlPath,
+                    new TypeReference<List<Course>>() {}
+            );
 
-        logger.info("--- Courses with 3-4 credits ---");
-        courseRepo.findByCreditsRange(3, 4).forEach(c -> logger.info(c.toString()));
+            logger.info("=== Comparing original and restored data ===");
+            boolean studentsJsonMatch = compareStudents(originalStudentRepo.getAll(), studentsFromJson);
+            boolean studentsYamlMatch = compareStudents(originalStudentRepo.getAll(), studentsFromYaml);
+            boolean coursesJsonMatch = compareCourses(originalCourseRepo.getAll(), coursesFromJson);
+            boolean coursesYamlMatch = compareCourses(originalCourseRepo.getAll(), coursesFromYaml);
 
-        logger.info("--- Courses starting after 2025-02-01 ---");
-        courseRepo.findStartingAfter(LocalDate.of(2025, 2, 1))
-                .forEach(c -> logger.info(c.toString()));
+            logger.info("Students JSON match: " + studentsJsonMatch);
+            logger.info("Students YAML match: " + studentsYamlMatch);
+            logger.info("Courses JSON match: " + coursesJsonMatch);
+            logger.info("Courses YAML match: " + coursesYamlMatch);
 
-        logger.info("--- Courses with 'Java' in title ---");
-        courseRepo.findByTitleContains("Java").forEach(c -> logger.info(c.toString()));
+            if (studentsJsonMatch && studentsYamlMatch && coursesJsonMatch && coursesYamlMatch) {
+                logger.info("All data restored successfully and matches original data");
+            }
 
-        logger.info("--- Terminal operations: map, reduce ---");
-        courseRepo.getTotalCredits();
-        courseRepo.getAverageCredits();
-        courseRepo.printAllTitles();
-        courseRepo.concatenateTitles();
+            logger.info("=== Demonstrating exception handling ===");
+            try {
+                serializationService.loadFromJson("nonexistent.json", new TypeReference<List<Student>>() {});
+            } catch (DataSerializationException e) {
+                logger.warning("Expected exception caught: " + e.getMessage());
+            }
 
-        logger.info("=== Performance Comparison: stream vs parallelStream ===");
-        performanceTest(studentRepo, courseRepo);
+            logger.info("Lab 7 completed successfully");
 
-        logger.info("Lab 6 Demo completed");
+        } catch (IOException e) {
+            logger.severe("Failed to load configuration: " + e.getMessage());
+        } catch (DataSerializationException e) {
+            logger.severe("Serialization error: " + e.getMessage());
+        }
     }
 
-    private static void performanceTest(StudentRepository studentRepo, CourseRepository courseRepo) {
-        for (int i = 0; i < 10000; i++) {
-            studentRepo.add(new Student("Student" + i, "LastName" + i, 
-                    "student" + i + "@university.com", LocalDate.of(2024, 1, 1).plusDays(i % 365)));
+    private static boolean compareStudents(List<Student> original, List<Student> restored) {
+        if (original.size() != restored.size()) {
+            return false;
         }
+        for (int i = 0; i < original.size(); i++) {
+            Student o = original.get(i);
+            Student r = restored.get(i);
+            if (!o.firstName().equals(r.firstName()) ||
+                !o.lastName().equals(r.lastName()) ||
+                !o.email().equals(r.email()) ||
+                !o.enrollmentDate().equals(r.enrollmentDate())) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-        long start1 = System.nanoTime();
-        List<Student> result1 = studentRepo.getAll().stream()
-                .filter(s -> s.enrollmentDate().isAfter(LocalDate.of(2024, 6, 1)))
-                .toList();
-        long end1 = System.nanoTime();
-        long duration1 = (end1 - start1) / 1_000_000;
-        logger.info(() -> "Sequential stream: found " + result1.size() + " students in " + duration1 + " ms");
-
-        long start2 = System.nanoTime();
-        List<Student> result2 = studentRepo.getAll().parallelStream()
-                .filter(s -> s.enrollmentDate().isAfter(LocalDate.of(2024, 6, 1)))
-                .toList();
-        long end2 = System.nanoTime();
-        long duration2 = (end2 - start2) / 1_000_000;
-        logger.info(() -> "Parallel stream: found " + result2.size() + " students in " + duration2 + " ms");
+    private static boolean compareCourses(List<Course> original, List<Course> restored) {
+        if (original.size() != restored.size()) {
+            return false;
+        }
+        for (int i = 0; i < original.size(); i++) {
+            Course o = original.get(i);
+            Course r = restored.get(i);
+            if (!o.getTitle().equals(r.getTitle()) ||
+                !o.getDescription().equals(r.getDescription()) ||
+                o.getCredits() != r.getCredits() ||
+                !o.getStartDate().equals(r.getStartDate()) ||
+                o.getLevel() != r.getLevel()) {
+                return false;
+            }
+        }
+        return true;
     }
 }
