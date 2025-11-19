@@ -1,12 +1,12 @@
 package ua.university;
 
-import ua.university.exception.InvalidDataException;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
+
+import ua.university.exception.InvalidDataException;
 
 public record Student(String firstName, String lastName, String email, LocalDate enrollmentDate) implements Comparable<Student> {
     private static final Logger logger = Logger.getLogger(Student.class.getName());
