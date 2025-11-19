@@ -1,7 +1,5 @@
 package ua.university;
 
-import ua.university.exception.InvalidDataException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -9,6 +7,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Logger;
+
+import ua.university.exception.InvalidDataException;
 
 public class GenericRepository<T extends Comparable<T>> {
     private static final Logger logger = Logger.getLogger(GenericRepository.class.getName());
