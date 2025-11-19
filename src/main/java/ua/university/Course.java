@@ -1,14 +1,15 @@
 package ua.university;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import ua.university.exception.InvalidDataException;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import ua.university.exception.InvalidDataException;
 
 public class Course implements Comparable<Course> {
     private static final Logger logger = Logger.getLogger(Course.class.getName());
