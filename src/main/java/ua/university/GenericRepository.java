@@ -1,5 +1,7 @@
 package ua.university;
 
+import ua.university.exception.InvalidDataException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,9 +20,15 @@ public class GenericRepository<T extends Comparable<T>> {
     }
 
     public void add(T element) {
-        Objects.requireNonNull(element);
-        storage.add(element);
-        logger.info(() -> "Added element with id=" + extractor.extractId(element));
+        Objects.requireNonNull(element, "Element cannot be null");
+        
+        try {
+            storage.add(element);
+            logger.info(() -> "Successfully added element with id=" + extractor.extractId(element));
+        } catch (InvalidDataException e) {
+            logger.severe(() -> "Validation failed when adding element: " + e.getMessage());
+            throw e;
+        }
     }
 
     public boolean removeByIdentity(Object id) {

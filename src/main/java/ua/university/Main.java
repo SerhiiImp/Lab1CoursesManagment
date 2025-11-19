@@ -1,143 +1,222 @@
 package ua.university;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import ua.university.config.ConfigManager;
-import ua.university.exception.DataSerializationException;
-import ua.university.service.SerializationService;
+import ua.university.exception.InvalidDataException;
 
-import java.io.IOException;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.logging.Logger;
 
 public class Main {
     private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     public static void main(String[] args) {
-        logger.info("Starting Lab 7 - Serialization and File Handling");
+        logger.info("=== Starting Lab 8: Data Validation and Object Creation ===\n");
+
+        StudentRepository studentRepo = new StudentRepository();
+        CourseRepository courseRepo = new CourseRepository();
+
+        demonstrateValidObjects(studentRepo, courseRepo);
+        System.out.println("\n" + "=".repeat(80) + "\n");
+        demonstrateInvalidObjects();
+        System.out.println("\n" + "=".repeat(80) + "\n");
+        demonstrateRepositoryValidation(studentRepo, courseRepo);
+
+        logger.info("\n=== Lab 8 completed successfully ===");
+    }
+
+    private static void demonstrateValidObjects(StudentRepository studentRepo, CourseRepository courseRepo) {
+        logger.info("=== Demonstration 1: Creating Valid Objects ===\n");
 
         try {
-            ConfigManager config = new ConfigManager("src/main/resources/config.properties");
-            logger.info("Configuration loaded successfully");
-
-            String studentsJsonPath = config.getProperty("students.json.path");
-            String studentsYamlPath = config.getProperty("students.yaml.path");
-            String coursesJsonPath = config.getProperty("courses.json.path");
-            String coursesYamlPath = config.getProperty("courses.yaml.path");
-            int testObjectsCount = config.getIntProperty("test.objects.count", 5);
-
-            logger.info("Creating test data with " + testObjectsCount + " objects");
-
-            StudentRepository originalStudentRepo = new StudentRepository();
-            for (int i = 1; i <= testObjectsCount; i++) {
-                originalStudentRepo.add(new Student(
-                        "Student" + i,
-                        "LastName" + i,
-                        "student" + i + "@university.com",
-                        LocalDate.of(2024, 9, i)
-                ));
-            }
-
-            CourseRepository originalCourseRepo = new CourseRepository();
-            originalCourseRepo.add(new Course("Java Programming", "Introduction to Java", 3, LocalDate.of(2025, 1, 15), CourseLevel.BEGINNER));
-            originalCourseRepo.add(new Course("Data Structures", "Advanced Data Structures", 4, LocalDate.of(2025, 2, 1), CourseLevel.INTERMEDIATE));
-            originalCourseRepo.add(new Course("Algorithms", "Algorithm Design and Analysis", 5, LocalDate.of(2025, 3, 1), CourseLevel.ADVANCED));
-            originalCourseRepo.add(new Course("Spring Boot", "Enterprise Java Development", 4, LocalDate.of(2025, 4, 1), CourseLevel.ADVANCED));
-            originalCourseRepo.add(new Course("Database Systems", "SQL and NoSQL Databases", 3, LocalDate.of(2025, 1, 20), CourseLevel.INTERMEDIATE));
-
-            SerializationService serializationService = new SerializationService();
-
-            logger.info("=== Saving data to JSON ===");
-            serializationService.saveToJson(originalStudentRepo.getAll(), studentsJsonPath);
-            serializationService.saveToJson(originalCourseRepo.getAll(), coursesJsonPath);
-
-            logger.info("=== Saving data to YAML ===");
-            serializationService.saveToYaml(originalStudentRepo.getAll(), studentsYamlPath);
-            serializationService.saveToYaml(originalCourseRepo.getAll(), coursesYamlPath);
-
-            logger.info("=== Loading data from JSON ===");
-            List<Student> studentsFromJson = serializationService.loadFromJson(
-                    studentsJsonPath,
-                    new TypeReference<List<Student>>() {}
+            logger.info("Creating valid student 1...");
+            Student student1 = new Student(
+                "Ivan",
+                "Petrov",
+                "ivan.petrov@university.ua",
+                LocalDate.of(2024, 9, 1)
             );
-            List<Course> coursesFromJson = serializationService.loadFromJson(
-                    coursesJsonPath,
-                    new TypeReference<List<Course>>() {}
+            studentRepo.add(student1);
+            System.out.println("✓ Created: " + student1);
+
+            logger.info("\nCreating valid student 2...");
+            Student student2 = new Student(
+                "Maria",
+                "Kovalenko",
+                "maria.k@university.ua",
+                LocalDate.of(2024, 9, 15)
             );
+            studentRepo.add(student2);
+            System.out.println("✓ Created: " + student2);
 
-            logger.info("=== Loading data from YAML ===");
-            List<Student> studentsFromYaml = serializationService.loadFromYaml(
-                    studentsYamlPath,
-                    new TypeReference<List<Student>>() {}
+            logger.info("\nCreating valid student 3...");
+            Student student3 = new Student(
+                "Oleksandr",
+                "Shevchenko",
+                "alex.shev@university.ua",
+                LocalDate.of(2024, 8, 20)
             );
-            List<Course> coursesFromYaml = serializationService.loadFromYaml(
-                    coursesYamlPath,
-                    new TypeReference<List<Course>>() {}
+            studentRepo.add(student3);
+            System.out.println("✓ Created: " + student3);
+
+            logger.info("\n\nCreating valid course 1...");
+            Course course1 = new Course(
+                "Java Programming",
+                "Introduction to Java programming language",
+                5,
+                LocalDate.of(2025, 2, 1),
+                CourseLevel.BEGINNER
             );
+            courseRepo.add(course1);
+            System.out.println("✓ Created: " + course1);
 
-            logger.info("=== Comparing original and restored data ===");
-            boolean studentsJsonMatch = compareStudents(originalStudentRepo.getAll(), studentsFromJson);
-            boolean studentsYamlMatch = compareStudents(originalStudentRepo.getAll(), studentsFromYaml);
-            boolean coursesJsonMatch = compareCourses(originalCourseRepo.getAll(), coursesFromJson);
-            boolean coursesYamlMatch = compareCourses(originalCourseRepo.getAll(), coursesFromYaml);
+            logger.info("\nCreating valid course 2...");
+            Course course2 = new Course(
+                "Data Structures",
+                "Advanced data structures and algorithms",
+                6,
+                LocalDate.of(2025, 3, 1),
+                CourseLevel.INTERMEDIATE
+            );
+            courseRepo.add(course2);
+            System.out.println("✓ Created: " + course2);
 
-            logger.info("Students JSON match: " + studentsJsonMatch);
-            logger.info("Students YAML match: " + studentsYamlMatch);
-            logger.info("Courses JSON match: " + coursesJsonMatch);
-            logger.info("Courses YAML match: " + coursesYamlMatch);
+            logger.info("\n\n✓ All valid objects created successfully!");
+            logger.info(() -> "Total students in repository: " + studentRepo.countStudents());
+            logger.info(() -> "Total courses in repository: " + courseRepo.getAll().size());
 
-            if (studentsJsonMatch && studentsYamlMatch && coursesJsonMatch && coursesYamlMatch) {
-                logger.info("All data restored successfully and matches original data");
-            }
-
-            logger.info("=== Demonstrating exception handling ===");
-            try {
-                serializationService.loadFromJson("nonexistent.json", new TypeReference<List<Student>>() {});
-            } catch (DataSerializationException e) {
-                logger.warning("Expected exception caught: " + e.getMessage());
-            }
-
-            logger.info("Lab 7 completed successfully");
-
-        } catch (IOException e) {
-            logger.severe("Failed to load configuration: " + e.getMessage());
-        } catch (DataSerializationException e) {
-            logger.severe("Serialization error: " + e.getMessage());
+        } catch (InvalidDataException e) {
+            logger.severe("Unexpected validation error: " + e.getMessage());
         }
     }
 
-    private static boolean compareStudents(List<Student> original, List<Student> restored) {
-        if (original.size() != restored.size()) {
-            return false;
+    private static void demonstrateInvalidObjects() {
+        logger.info("=== Demonstration 2: Attempting to Create Invalid Objects ===\n");
+
+        logger.info("Test 1: Student with empty first name");
+        try {
+            new Student("", "Ivanov", "test@university.ua", LocalDate.now());
+            logger.severe("ERROR: Should have thrown InvalidDataException!");
+        } catch (InvalidDataException e) {
+            System.out.println("✗ Validation failed as expected:");
+            System.out.println("  " + e.getMessage());
+            displayErrors(e);
         }
-        for (int i = 0; i < original.size(); i++) {
-            Student o = original.get(i);
-            Student r = restored.get(i);
-            if (!o.firstName().equals(r.firstName()) ||
-                !o.lastName().equals(r.lastName()) ||
-                !o.email().equals(r.email()) ||
-                !o.enrollmentDate().equals(r.enrollmentDate())) {
-                return false;
-            }
+
+        System.out.println();
+        logger.info("Test 2: Student with invalid email format");
+        try {
+            new Student("Petro", "Ivanov", "not-an-email", LocalDate.now());
+            logger.severe("ERROR: Should have thrown InvalidDataException!");
+        } catch (InvalidDataException e) {
+            System.out.println("✗ Validation failed as expected:");
+            System.out.println("  " + e.getMessage());
+            displayErrors(e);
         }
-        return true;
+
+        System.out.println();
+        logger.info("Test 3: Student with future enrollment date");
+        try {
+            new Student("Anna", "Petrenko", "anna@university.ua", LocalDate.now().plusDays(10));
+            logger.severe("ERROR: Should have thrown InvalidDataException!");
+        } catch (InvalidDataException e) {
+            System.out.println("✗ Validation failed as expected:");
+            System.out.println("  " + e.getMessage());
+            displayErrors(e);
+        }
+
+        System.out.println();
+        logger.info("Test 4: Student with MULTIPLE validation errors");
+        try {
+            new Student("", null, "bad-email", LocalDate.now().plusYears(1));
+            logger.severe("ERROR: Should have thrown InvalidDataException!");
+        } catch (InvalidDataException e) {
+            System.out.println("✗ Validation failed as expected (multiple errors):");
+            System.out.println("  " + e.getMessage());
+            displayErrors(e);
+        }
+
+        System.out.println();
+        logger.info("Test 5: Course with invalid credits (too low)");
+        try {
+            new Course("Math", "Mathematics", 0, LocalDate.of(2025, 1, 1), CourseLevel.BEGINNER);
+            logger.severe("ERROR: Should have thrown InvalidDataException!");
+        } catch (InvalidDataException e) {
+            System.out.println("✗ Validation failed as expected:");
+            System.out.println("  " + e.getMessage());
+            displayErrors(e);
+        }
+
+        System.out.println();
+        logger.info("Test 6: Course with invalid credits (too high)");
+        try {
+            new Course("Physics", "Physics course", 15, LocalDate.of(2025, 1, 1), CourseLevel.ADVANCED);
+            logger.severe("ERROR: Should have thrown InvalidDataException!");
+        } catch (InvalidDataException e) {
+            System.out.println("✗ Validation failed as expected:");
+            System.out.println("  " + e.getMessage());
+            displayErrors(e);
+        }
+
+        System.out.println();
+        logger.info("Test 7: Course with null level");
+        try {
+            new Course("Chemistry", "Chemistry basics", 5, LocalDate.of(2025, 1, 1), null);
+            logger.severe("ERROR: Should have thrown InvalidDataException!");
+        } catch (InvalidDataException e) {
+            System.out.println("✗ Validation failed as expected:");
+            System.out.println("  " + e.getMessage());
+            displayErrors(e);
+        }
+
+        System.out.println();
+        logger.info("Test 8: Course with MULTIPLE validation errors");
+        try {
+            new Course("", null, 0, null, null);
+            logger.severe("ERROR: Should have thrown InvalidDataException!");
+        } catch (InvalidDataException e) {
+            System.out.println("✗ Validation failed as expected (multiple errors):");
+            System.out.println("  " + e.getMessage());
+            displayErrors(e);
+        }
+
+        logger.info("\n✓ All invalid object tests completed successfully!");
     }
 
-    private static boolean compareCourses(List<Course> original, List<Course> restored) {
-        if (original.size() != restored.size()) {
-            return false;
+    private static void demonstrateRepositoryValidation(StudentRepository studentRepo, CourseRepository courseRepo) {
+        logger.info("=== Demonstration 3: Repository Validation ===\n");
+
+        logger.info("Attempting to add invalid student to repository...");
+        try {
+            studentRepo.add(new Student("", "Test", "bad-email", LocalDate.now().plusDays(1)));
+            logger.severe("ERROR: Repository should have prevented invalid object!");
+        } catch (InvalidDataException e) {
+            System.out.println("✓ Repository correctly rejected invalid student:");
+            System.out.println("  " + e.getMessage());
         }
-        for (int i = 0; i < original.size(); i++) {
-            Course o = original.get(i);
-            Course r = restored.get(i);
-            if (!o.getTitle().equals(r.getTitle()) ||
-                !o.getDescription().equals(r.getDescription()) ||
-                o.getCredits() != r.getCredits() ||
-                !o.getStartDate().equals(r.getStartDate()) ||
-                o.getLevel() != r.getLevel()) {
-                return false;
-            }
+
+        System.out.println();
+        logger.info("Attempting to add invalid course to repository...");
+        try {
+            courseRepo.add(new Course("", null, 0, null, null));
+            logger.severe("ERROR: Repository should have prevented invalid object!");
+        } catch (InvalidDataException e) {
+            System.out.println("✓ Repository correctly rejected invalid course:");
+            System.out.println("  " + e.getMessage());
         }
-        return true;
+
+        System.out.println();
+        logger.info("Final repository state:");
+        logger.info(() -> "  Students: " + studentRepo.countStudents());
+        logger.info(() -> "  Courses: " + courseRepo.getAll().size());
+
+        System.out.println("\nStudents in repository:");
+        studentRepo.getAll().forEach(s -> System.out.println("  - " + s));
+
+        System.out.println("\nCourses in repository:");
+        courseRepo.getAll().forEach(c -> System.out.println("  - " + c));
+    }
+
+    private static void displayErrors(InvalidDataException e) {
+        System.out.println("  Detailed errors:");
+        e.getErrors().forEach(error -> System.out.println("    • " + error));
     }
 }

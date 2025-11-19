@@ -1,13 +1,20 @@
 package ua.university;
 
-import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import ua.university.exception.InvalidDataException;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.logging.Logger;
 
 public class Course implements Comparable<Course> {
+    private static final Logger logger = Logger.getLogger(Course.class.getName());
+    private static final int MIN_CREDITS = 1;
+    private static final int MAX_CREDITS = 10;
+
     private final String title;
     private final String description;
     private final int credits;
@@ -21,20 +28,57 @@ public class Course implements Comparable<Course> {
             @JsonProperty("credits") int credits,
             @JsonProperty("startDate") LocalDate startDate,
             @JsonProperty("level") CourseLevel level) {
-        if (title == null || title.isBlank()) throw new IllegalArgumentException("title is required");
-        this.title = title.trim();
-        this.description = description == null ? "" : description.trim();
-        if (credits <= 0) throw new IllegalArgumentException("credits must be > 0");
+        List<String> errors = new ArrayList<>();
+
+        if (title == null || title.isBlank()) {
+            errors.add("title: cannot be null or empty");
+        }
+        if (description == null) {
+            errors.add("description: cannot be null");
+        }
+        if (credits < MIN_CREDITS || credits > MAX_CREDITS) {
+            errors.add("credits: must be between " + MIN_CREDITS + " and " + MAX_CREDITS);
+        }
+        if (startDate == null) {
+            errors.add("startDate: cannot be null");
+        }
+        if (level == null) {
+            errors.add("level: cannot be null");
+        }
+
+        if (!errors.isEmpty()) {
+            logger.warning(() -> "Validation failed for Course: " + errors);
+            throw new InvalidDataException(errors);
+        }
+
+        this.title = title != null ? title.trim() : "";
+        this.description = description != null ? description.trim() : "";
         this.credits = credits;
-        this.startDate = Objects.requireNonNull(startDate);
-        this.level = Objects.requireNonNull(level);
+        this.startDate = startDate;
+        this.level = level;
+
+        logger.info(() -> "Course created successfully: " + this.title);
     }
 
-    public String getTitle() { return title; }
-    public String getDescription() { return description; }
-    public int getCredits() { return credits; }
-    public LocalDate getStartDate() { return startDate; }
-    public CourseLevel getLevel() { return level; }
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public int getCredits() {
+        return credits;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public CourseLevel getLevel() {
+        return level;
+    }
 
     @Override
     public int compareTo(Course other) {
