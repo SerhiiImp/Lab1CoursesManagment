@@ -1,143 +1,75 @@
 package ua.university;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import ua.university.config.ConfigManager;
-import ua.university.exception.DataSerializationException;
-import ua.university.service.SerializationService;
+import ua.university.service.ConcurrentLoader;
+import ua.university.service.DataProcessingService;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
 public class Main {
     private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     public static void main(String[] args) {
-        logger.info("Starting Lab 7 - Serialization and File Handling");
+        logger.info("Starting Lab 9 - Multithreading & Concurrency");
 
         try {
             ConfigManager config = new ConfigManager("src/main/resources/config.properties");
-            logger.info("Configuration loaded successfully");
-
             String studentsJsonPath = config.getProperty("students.json.path");
             String studentsYamlPath = config.getProperty("students.yaml.path");
             String coursesJsonPath = config.getProperty("courses.json.path");
             String coursesYamlPath = config.getProperty("courses.yaml.path");
-            int testObjectsCount = config.getIntProperty("test.objects.count", 5);
 
-            logger.info("Creating test data with " + testObjectsCount + " objects");
+            ConcurrentLoader loader = new ConcurrentLoader();
 
-            StudentRepository originalStudentRepo = new StudentRepository();
-            for (int i = 1; i <= testObjectsCount; i++) {
-                originalStudentRepo.add(new Student(
-                        "Student" + i,
-                        "LastName" + i,
-                        "student" + i + "@university.com",
-                        LocalDate.of(2024, 9, i)
-                ));
-            }
+            CompletableFuture<StudentRepository> studentsFromJsonF = loader.loadStudentsFromJsonAsync(studentsJsonPath);
+            CompletableFuture<StudentRepository> studentsFromYamlF = loader.loadStudentsFromYamlAsync(studentsYamlPath);
+            CompletableFuture<CourseRepository> coursesFromJsonF = loader.loadCoursesFromJsonAsync(coursesJsonPath);
+            CompletableFuture<CourseRepository> coursesFromYamlF = loader.loadCoursesFromYamlAsync(coursesYamlPath);
 
-            CourseRepository originalCourseRepo = new CourseRepository();
-            originalCourseRepo.add(new Course("Java Programming", "Introduction to Java", 3, LocalDate.of(2025, 1, 15), CourseLevel.BEGINNER));
-            originalCourseRepo.add(new Course("Data Structures", "Advanced Data Structures", 4, LocalDate.of(2025, 2, 1), CourseLevel.INTERMEDIATE));
-            originalCourseRepo.add(new Course("Algorithms", "Algorithm Design and Analysis", 5, LocalDate.of(2025, 3, 1), CourseLevel.ADVANCED));
-            originalCourseRepo.add(new Course("Spring Boot", "Enterprise Java Development", 4, LocalDate.of(2025, 4, 1), CourseLevel.ADVANCED));
-            originalCourseRepo.add(new Course("Database Systems", "SQL and NoSQL Databases", 3, LocalDate.of(2025, 1, 20), CourseLevel.INTERMEDIATE));
+            StudentRepository studentsFromJson = studentsFromJsonF.join();
+            StudentRepository studentsFromYaml = studentsFromYamlF.join();
+            CourseRepository coursesFromJson = coursesFromJsonF.join();
+            CourseRepository coursesFromYaml = coursesFromYamlF.join();
 
-            SerializationService serializationService = new SerializationService();
+            logger.info(() -> "Loaded students JSON=" + studentsFromJson.getAll().size() + ", YAML=" + studentsFromYaml.getAll().size());
+            logger.info(() -> "Loaded courses JSON=" + coursesFromJson.getAll().size() + ", YAML=" + coursesFromYaml.getAll().size());
 
-            logger.info("=== Saving data to JSON ===");
-            serializationService.saveToJson(originalStudentRepo.getAll(), studentsJsonPath);
-            serializationService.saveToJson(originalCourseRepo.getAll(), coursesJsonPath);
+            DataProcessingService processing = new DataProcessingService();
 
-            logger.info("=== Saving data to YAML ===");
-            serializationService.saveToYaml(originalStudentRepo.getAll(), studentsYamlPath);
-            serializationService.saveToYaml(originalCourseRepo.getAll(), coursesYamlPath);
-
-            logger.info("=== Loading data from JSON ===");
-            List<Student> studentsFromJson = serializationService.loadFromJson(
-                    studentsJsonPath,
-                    new TypeReference<List<Student>>() {}
-            );
-            List<Course> coursesFromJson = serializationService.loadFromJson(
-                    coursesJsonPath,
-                    new TypeReference<List<Course>>() {}
-            );
-
-            logger.info("=== Loading data from YAML ===");
-            List<Student> studentsFromYaml = serializationService.loadFromYaml(
-                    studentsYamlPath,
-                    new TypeReference<List<Student>>() {}
-            );
-            List<Course> coursesFromYaml = serializationService.loadFromYaml(
-                    coursesYamlPath,
-                    new TypeReference<List<Course>>() {}
-            );
-
-            logger.info("=== Comparing original and restored data ===");
-            boolean studentsJsonMatch = compareStudents(originalStudentRepo.getAll(), studentsFromJson);
-            boolean studentsYamlMatch = compareStudents(originalStudentRepo.getAll(), studentsFromYaml);
-            boolean coursesJsonMatch = compareCourses(originalCourseRepo.getAll(), coursesFromJson);
-            boolean coursesYamlMatch = compareCourses(originalCourseRepo.getAll(), coursesFromYaml);
-
-            logger.info("Students JSON match: " + studentsJsonMatch);
-            logger.info("Students YAML match: " + studentsYamlMatch);
-            logger.info("Courses JSON match: " + coursesJsonMatch);
-            logger.info("Courses YAML match: " + coursesYamlMatch);
-
-            if (studentsJsonMatch && studentsYamlMatch && coursesJsonMatch && coursesYamlMatch) {
-                logger.info("All data restored successfully and matches original data");
-            }
-
-            logger.info("=== Demonstrating exception handling ===");
+            long advPs = processing.countAdvancedCoursesParallelStream(coursesFromJson);
+            long advExec;
             try {
-                serializationService.loadFromJson("nonexistent.json", new TypeReference<List<Student>>() {});
-            } catch (DataSerializationException e) {
-                logger.warning("Expected exception caught: " + e.getMessage());
+                advExec = processing.countAdvancedCoursesExecutor(coursesFromJson);
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
             }
+            logger.info(() -> "Advanced courses: parallelStream=" + advPs + ", executor=" + advExec);
 
-            logger.info("Lab 7 completed successfully");
+            var afterDate = LocalDate.of(2024, 9, 2);
+            var s1 = processing.filterStudentsAfterParallelStream(studentsFromJson, afterDate);
+            var s2 = processing.filterStudentsAfterAsync(studentsFromJson, afterDate).join();
+            logger.info(() -> "Filtered students count: parallelStream=" + s1.size() + ", completableFuture=" + s2.size());
+
+            var avg = processing.averageCreditsAsync(coursesFromJson).thenCombine(
+                    processing.countByLevelAsync(coursesFromJson, CourseLevel.ADVANCED),
+                    (a, c) -> {
+                        logger.info(() -> "Average credits=" + a + ", advanced count=" + c);
+                        return a;
+                    }
+            ).join();
+            logger.info(() -> "Combined result average credits=" + avg);
+
+            loader.shutdown();
+            processing.shutdown();
+
+            logger.info("Lab 9 demo completed");
 
         } catch (IOException e) {
-            logger.severe("Failed to load configuration: " + e.getMessage());
-        } catch (DataSerializationException e) {
-            logger.severe("Serialization error: " + e.getMessage());
+            logger.severe(() -> "Failed to load configuration: " + e.getMessage());
         }
-    }
-
-    private static boolean compareStudents(List<Student> original, List<Student> restored) {
-        if (original.size() != restored.size()) {
-            return false;
-        }
-        for (int i = 0; i < original.size(); i++) {
-            Student o = original.get(i);
-            Student r = restored.get(i);
-            if (!o.firstName().equals(r.firstName()) ||
-                !o.lastName().equals(r.lastName()) ||
-                !o.email().equals(r.email()) ||
-                !o.enrollmentDate().equals(r.enrollmentDate())) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean compareCourses(List<Course> original, List<Course> restored) {
-        if (original.size() != restored.size()) {
-            return false;
-        }
-        for (int i = 0; i < original.size(); i++) {
-            Course o = original.get(i);
-            Course r = restored.get(i);
-            if (!o.getTitle().equals(r.getTitle()) ||
-                !o.getDescription().equals(r.getDescription()) ||
-                o.getCredits() != r.getCredits() ||
-                !o.getStartDate().equals(r.getStartDate()) ||
-                o.getLevel() != r.getLevel()) {
-                return false;
-            }
-        }
-        return true;
     }
 }

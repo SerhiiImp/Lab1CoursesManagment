@@ -1,16 +1,18 @@
 package ua.university;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 
 public class GenericRepository<T extends Comparable<T>> {
     private static final Logger logger = Logger.getLogger(GenericRepository.class.getName());
-    protected final List<T> storage = new ArrayList<>();
+    protected final List<T> storage = new CopyOnWriteArrayList<>();
     private final IdentityExtractor<T> extractor;
 
     public GenericRepository(IdentityExtractor<T> extractor) {
@@ -21,6 +23,11 @@ public class GenericRepository<T extends Comparable<T>> {
         Objects.requireNonNull(element);
         storage.add(element);
         logger.info(() -> "Added element with id=" + extractor.extractId(element));
+    }
+
+    public void addAll(Collection<T> elements) {
+        Objects.requireNonNull(elements);
+        elements.forEach(this::add);
     }
 
     public boolean removeByIdentity(Object id) {
